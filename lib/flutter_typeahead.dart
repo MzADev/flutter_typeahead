@@ -1186,7 +1186,9 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
             );
     }
 
-    return child;
+    return Container(
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+        child: child);
   }
 
   Widget createErrorWidget() {
