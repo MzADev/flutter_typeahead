@@ -1113,6 +1113,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
         child = Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
+              color: Colors.red
             ),
             child: createNoItemsFoundWidget());
       }
@@ -1128,6 +1129,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
                 parent: this._animationController, curve: Curves.fastOutSlowIn),
             child: Container(
                 decoration: BoxDecoration(
+                  color: Colors.blue,
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.all(
                     Radius.circular(20.0),
@@ -1187,7 +1189,8 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
     }
 
     return Container(
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20),
+        color: Colors.orange),
         child: child);
   }
 
