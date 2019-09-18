@@ -1188,7 +1188,8 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
     return widget.noItemsFoundBuilder != null
         ? widget.noItemsFoundBuilder(context)
         : Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
+//            padding: const EdgeInsets.symmetric(vertical: 8.0),
+    padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
             child: Text(
               'نتیجه‌ای یافت نشد!',
               textAlign: TextAlign.center,
