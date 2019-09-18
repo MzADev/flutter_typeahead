@@ -1110,12 +1110,8 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
       if (widget.hideOnEmpty) {
         child = Container(height: 0);
       } else {
-        child = Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: Colors.red
-            ),
-            child: createNoItemsFoundWidget());
+        //color mishe dad
+        child = createNoItemsFoundWidget();
       }
     } else {
       child = createSuggestionsWidget();
@@ -1127,15 +1123,8 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
             axisAlignment: -1.0,
             sizeFactor: CurvedAnimation(
                 parent: this._animationController, curve: Curves.fastOutSlowIn),
-            child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(20.0),
-                  ),
-                ),
-                child: child),
+            child: child,
+      //color mishe dad
           );
 
     BoxConstraints constraints;
@@ -1158,6 +1147,8 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
 //      shape: widget.decoration.shape,
 //      borderRadius: widget.decoration.borderRadius,
 //      shadowColor: widget.decoration.shadowColor,
+    color: Colors.blueAccent,
+      borderRadius: BorderRadius.circular(20),
       child: ConstrainedBox(
         constraints: constraints,
         child: animationChild,
@@ -1188,10 +1179,11 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
             );
     }
 
-    return Container(
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20),
-        color: Colors.orange),
-        child: child);
+//    return Container(
+//        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20),
+//        color: Colors.orange),
+//        child: child);
+  return child;
   }
 
   Widget createErrorWidget() {
