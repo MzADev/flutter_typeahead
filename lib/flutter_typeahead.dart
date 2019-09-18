@@ -1190,7 +1190,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
         : Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Text(
-              'نتیجه‌ای یافت نشد!',
+              'نتیجه‌ای gbyhtyhtyyhtyیافت نشد!',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Theme.of(context).disabledColor,
