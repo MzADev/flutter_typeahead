@@ -1147,7 +1147,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
 //      shape: widget.decoration.shape,
 //      borderRadius: widget.decoration.borderRadius,
 //      shadowColor: widget.decoration.shadowColor,
-    color: Colors.blueAccent,
+//    color: Colors.blueAccent,
       borderRadius: BorderRadius.circular(20),
       child: ConstrainedBox(
         constraints: constraints,
@@ -1204,7 +1204,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
         : Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Text(
-              'نتیجه‌ای gbyhtyhtyyhtyیافت نشد!',
+              'نتیجه‌ای یافت نشد!',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Theme.of(context).disabledColor,
