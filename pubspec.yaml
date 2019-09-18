@@ -41,9 +41,11 @@ flutter:
   # example:
   # fonts:
   #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
+  fonts:
+    - family: iranyekan
+      fonts:
+        - asset: res/fonts/IRANYekanMobileMedium.ttf
+          weight: 500
   #         style: italic
   #   - family: Trajan Pro
   #     fonts:

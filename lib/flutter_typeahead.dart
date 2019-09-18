@@ -712,6 +712,7 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
 
   TextEditingController get _effectiveController =>
       widget.textFieldConfiguration.controller ?? _textEditingController;
+
   FocusNode get _effectiveFocusNode =>
       widget.textFieldConfiguration.focusNode ?? _focusNode;
   VoidCallback _focusNodeListener;
@@ -720,6 +721,7 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
 
   // Timer that resizes the suggestion box on each tick. Only active when the user is scrolling.
   Timer _resizeOnScrollTimer;
+
   // The rate at which the suggestion box will resize when the user is scrolling
   final Duration _resizeOnScrollRefreshRate = const Duration(milliseconds: 500);
 
@@ -1087,13 +1089,18 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
       if (widget.hideOnError) {
         child = Container(height: 0);
       } else {
-        child = createErrorWidget();
+        child = Container();
+//        child = createErrorWidget();
       }
     } else if (this._suggestions.length == 0) {
       if (widget.hideOnEmpty) {
         child = Container(height: 0);
       } else {
-        child = createNoItemsFoundWidget();
+        child = Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: createNoItemsFoundWidget());
       }
     } else {
       child = createSuggestionsWidget();
@@ -1105,7 +1112,14 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
             axisAlignment: -1.0,
             sizeFactor: CurvedAnimation(
                 parent: this._animationController, curve: Curves.fastOutSlowIn),
-            child: child,
+            child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.rectangle,
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(20.0),
+                  ),
+                ),
+                child: child),
           );
 
     BoxConstraints constraints;
@@ -1123,11 +1137,11 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
     }
 
     var container = Material(
-      elevation: widget.decoration.elevation,
-      color: widget.decoration.color,
-      shape: widget.decoration.shape,
-      borderRadius: widget.decoration.borderRadius,
-      shadowColor: widget.decoration.shadowColor,
+//      elevation: widget.decoration.elevation,
+//      color: widget.decoration.color,
+//      shape: widget.decoration.shape,
+//      borderRadius: widget.decoration.borderRadius,
+//      shadowColor: widget.decoration.shadowColor,
       child: ConstrainedBox(
         constraints: constraints,
         child: animationChild,
@@ -1182,7 +1196,10 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
               'نتیجه‌ای یافت نشد!',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: Theme.of(context).disabledColor, fontSize: 18.0),
+                color: Theme.of(context).disabledColor,
+                fontSize: 14.0,
+                fontFamily: 'iranyekan',
+              ),
             ),
           );
   }
@@ -1192,9 +1209,9 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
       padding: EdgeInsets.zero,
       primary: false,
       shrinkWrap: true,
-      reverse: widget.suggestionsBox.direction == AxisDirection.down
-          ? false
-          : true, // reverses the list to start at the bottom
+      reverse:
+          widget.suggestionsBox.direction == AxisDirection.down ? false : true,
+      // reverses the list to start at the bottom
       children: this._suggestions.map((T suggestion) {
         return InkWell(
           child: widget.itemBuilder(context, suggestion),
