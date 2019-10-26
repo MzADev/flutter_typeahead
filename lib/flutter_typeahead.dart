@@ -708,7 +708,7 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
     with WidgetsBindingObserver {
   FocusNode _focusNode;
   TextEditingController _textEditingController;
-  _SuggestionsBox _suggestionsBox;
+  SuggestionsBox _suggestionsBox;
 
   TextEditingController get _effectiveController =>
       widget.textFieldConfiguration.controller ?? _textEditingController;
@@ -765,8 +765,8 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
     }
 
     this._suggestionsBox =
-        _SuggestionsBox(context, widget.direction, widget.autoFlipDirection);
-    widget.suggestionsBoxController?._suggestionsBox = this._suggestionsBox;
+        SuggestionsBox(context, widget.direction, widget.autoFlipDirection);
+    widget.suggestionsBoxController?.suggestionsBox = this._suggestionsBox;
 
     // hide suggestions box on keyboard closed
     this._keyboardVisibilityId = _keyboardVisibility.addNewListener(
@@ -939,7 +939,7 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
 }
 
 class _SuggestionsList<T> extends StatefulWidget {
-  final _SuggestionsBox suggestionsBox;
+  final SuggestionsBox suggestionsBox;
   final TextEditingController controller;
   final bool getImmediateSuggestions;
   final SuggestionSelectionCallback<T> onSuggestionSelected;
@@ -1532,7 +1532,7 @@ class TextFieldConfiguration<T> {
   }
 }
 
-class _SuggestionsBox {
+class SuggestionsBox {
   static const int waitMetricsTimeoutMillis = 1000;
   static const double minOverlaySpace = 64.0;
 
@@ -1543,32 +1543,32 @@ class _SuggestionsBox {
   OverlayEntry _overlayEntry;
   AxisDirection direction;
 
-  bool _isOpened = false;
+  bool isOpened = false;
   bool widgetMounted = true;
   double maxHeight = 300.0;
   double textBoxWidth = 100.0;
   double textBoxHeight = 100.0;
   double directionUpOffset;
 
-  _SuggestionsBox(this.context, this.direction, this.autoFlipDirection)
+  SuggestionsBox(this.context, this.direction, this.autoFlipDirection)
       : desiredDirection = direction;
 
   void open() {
-    if (this._isOpened) return;
+    if (this.isOpened) return;
     assert(this._overlayEntry != null);
     Overlay.of(context).insert(this._overlayEntry);
-    this._isOpened = true;
+    this.isOpened = true;
   }
 
   void close() {
-    if (!this._isOpened) return;
+    if (!this.isOpened) return;
     assert(this._overlayEntry != null);
     this._overlayEntry.remove();
-    this._isOpened = false;
+    this.isOpened = false;
   }
 
   void toggle() {
-    if (this._isOpened) {
+    if (this.isOpened) {
       this.close();
     } else {
       this.open();
@@ -1740,25 +1740,25 @@ class _SuggestionsBox {
 /// Supply an instance of this class to the [TypeAhead.suggestionsBoxController]
 /// property to manually control the suggestions box
 class SuggestionsBoxController {
-  _SuggestionsBox _suggestionsBox;
+  SuggestionsBox suggestionsBox;
 
   /// Opens the suggestions box
   void open() {
-    _suggestionsBox?.open();
+    suggestionsBox?.open();
   }
 
   /// Closes the suggestions box
   void close() {
-    _suggestionsBox?.close();
+    suggestionsBox?.close();
   }
 
   /// Opens the suggestions box if closed and vice-versa
   void toggle() {
-    _suggestionsBox?.toggle();
+    suggestionsBox?.toggle();
   }
 
   /// Recalculates the height of the suggestions box
   void resize() {
-    _suggestionsBox?.resize();
+    suggestionsBox?.resize();
   }
 }
