@@ -21,9 +21,9 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
-import 'package:keyboard_visibility/keyboard_visibility.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 
-typedef FutureOr<List<T>> SuggestionsCallback<T>(String pattern);
+typedef FutureOr<Iterable<T>> SuggestionsCallback<T>(String pattern);
 typedef Widget ItemBuilder<T>(BuildContext context, T itemData);
 typedef void SuggestionSelectionCallback<T>(T suggestion);
 typedef Widget ErrorBuilder(BuildContext context, Object error);
@@ -33,7 +33,10 @@ typedef AnimationTransitionBuilder(
 
 // Cupertino BoxDecoration taken from flutter/lib/src/cupertino/text_field.dart
 const BorderSide _kDefaultRoundedBorderSide = BorderSide(
-  color: CupertinoColors.lightBackgroundGray,
+  color: CupertinoDynamicColor.withBrightness(
+    color: Color(0x33000000),
+    darkColor: Color(0x33FFFFFF),
+  ),
   style: BorderStyle.solid,
   width: 0.0,
 );
@@ -44,8 +47,12 @@ const Border _kDefaultRoundedBorder = Border(
   right: _kDefaultRoundedBorderSide,
 );
 const BoxDecoration _kDefaultRoundedBorderDecoration = BoxDecoration(
+  color: CupertinoDynamicColor.withBrightness(
+    color: CupertinoColors.white,
+    darkColor: CupertinoColors.black,
+  ),
   border: _kDefaultRoundedBorder,
-  borderRadius: BorderRadius.all(Radius.circular(4.0)),
+  borderRadius: BorderRadius.all(Radius.circular(5.0)),
 );
 
 /// A [FormField](https://docs.flutter.io/flutter/widgets/FormField-class.html)
@@ -64,80 +71,80 @@ class CupertinoTypeAheadFormField<T> extends FormField<String> {
   /// Creates a [CupertinoTypeAheadFormField]
   CupertinoTypeAheadFormField(
       {Key key,
-      String initialValue,
-      bool getImmediateSuggestions: false,
-      bool autovalidate: false,
-      FormFieldSetter<String> onSaved,
-      FormFieldValidator<String> validator,
-      ErrorBuilder errorBuilder,
-      WidgetBuilder noItemsFoundBuilder,
-      WidgetBuilder loadingBuilder,
-      Duration debounceDuration: const Duration(milliseconds: 300),
-      CupertinoSuggestionsBoxDecoration suggestionsBoxDecoration:
-          const CupertinoSuggestionsBoxDecoration(),
-      CupertinoSuggestionsBoxController suggestionsBoxController,
-      @required SuggestionSelectionCallback<T> onSuggestionSelected,
-      @required ItemBuilder<T> itemBuilder,
-      @required SuggestionsCallback<T> suggestionsCallback,
-      double suggestionsBoxVerticalOffset: 5.0,
-      this.textFieldConfiguration: const CupertinoTextFieldConfiguration(),
-      AnimationTransitionBuilder transitionBuilder,
-      Duration animationDuration: const Duration(milliseconds: 500),
-      double animationStart: 0.25,
-      AxisDirection direction: AxisDirection.down,
-      bool hideOnLoading: false,
-      bool hideOnEmpty: false,
-      bool hideOnError: false,
-      bool hideSuggestionsOnKeyboardHide: true,
-      bool keepSuggestionsOnLoading: true,
-      bool keepSuggestionsOnSuggestionSelected: false,
-      bool autoFlipDirection: false})
+        String initialValue,
+        bool getImmediateSuggestions: false,
+        bool autovalidate: false,
+        FormFieldSetter<String> onSaved,
+        FormFieldValidator<String> validator,
+        ErrorBuilder errorBuilder,
+        WidgetBuilder noItemsFoundBuilder,
+        WidgetBuilder loadingBuilder,
+        Duration debounceDuration: const Duration(milliseconds: 300),
+        CupertinoSuggestionsBoxDecoration suggestionsBoxDecoration:
+        const CupertinoSuggestionsBoxDecoration(),
+        CupertinoSuggestionsBoxController suggestionsBoxController,
+        @required SuggestionSelectionCallback<T> onSuggestionSelected,
+        @required ItemBuilder<T> itemBuilder,
+        @required SuggestionsCallback<T> suggestionsCallback,
+        double suggestionsBoxVerticalOffset: 5.0,
+        this.textFieldConfiguration: const CupertinoTextFieldConfiguration(),
+        AnimationTransitionBuilder transitionBuilder,
+        Duration animationDuration: const Duration(milliseconds: 500),
+        double animationStart: 0.25,
+        AxisDirection direction: AxisDirection.down,
+        bool hideOnLoading: false,
+        bool hideOnEmpty: false,
+        bool hideOnError: false,
+        bool hideSuggestionsOnKeyboardHide: true,
+        bool keepSuggestionsOnLoading: true,
+        bool keepSuggestionsOnSuggestionSelected: false,
+        bool autoFlipDirection: false})
       : assert(
-            initialValue == null || textFieldConfiguration.controller == null),
+  initialValue == null || textFieldConfiguration.controller == null),
         super(
-            key: key,
-            onSaved: onSaved,
-            validator: validator,
-            autovalidate: autovalidate,
-            initialValue: textFieldConfiguration.controller != null
-                ? textFieldConfiguration.controller.text
-                : (initialValue ?? ''),
-            builder: (FormFieldState<String> field) {
-              final _CupertinoTypeAheadFormFieldState state = field;
+          key: key,
+          onSaved: onSaved,
+          validator: validator,
+          autovalidate: autovalidate,
+          initialValue: textFieldConfiguration.controller != null
+              ? textFieldConfiguration.controller.text
+              : (initialValue ?? ''),
+          builder: (FormFieldState<String> field) {
+            final _CupertinoTypeAheadFormFieldState state = field;
 
-              return CupertinoTypeAheadField(
-                getImmediateSuggestions: getImmediateSuggestions,
-                transitionBuilder: transitionBuilder,
-                errorBuilder: errorBuilder,
-                noItemsFoundBuilder: noItemsFoundBuilder,
-                loadingBuilder: loadingBuilder,
-                debounceDuration: debounceDuration,
-                suggestionsBoxDecoration: suggestionsBoxDecoration,
-                suggestionsBoxController: suggestionsBoxController,
-                textFieldConfiguration: textFieldConfiguration.copyWith(
-                  onChanged: (text) {
-                    state.didChange(text);
-                    textFieldConfiguration.onChanged(text);
-                  },
-                  controller: state._effectiveController,
-                ),
-                suggestionsBoxVerticalOffset: suggestionsBoxVerticalOffset,
-                onSuggestionSelected: onSuggestionSelected,
-                itemBuilder: itemBuilder,
-                suggestionsCallback: suggestionsCallback,
-                animationStart: animationStart,
-                animationDuration: animationDuration,
-                direction: direction,
-                hideOnLoading: hideOnLoading,
-                hideOnEmpty: hideOnEmpty,
-                hideOnError: hideOnError,
-                hideSuggestionsOnKeyboardHide: hideSuggestionsOnKeyboardHide,
-                keepSuggestionsOnLoading: keepSuggestionsOnLoading,
-                keepSuggestionsOnSuggestionSelected:
-                    keepSuggestionsOnSuggestionSelected,
-                autoFlipDirection: autoFlipDirection,
-              );
-            });
+            return CupertinoTypeAheadField(
+              getImmediateSuggestions: getImmediateSuggestions,
+              transitionBuilder: transitionBuilder,
+              errorBuilder: errorBuilder,
+              noItemsFoundBuilder: noItemsFoundBuilder,
+              loadingBuilder: loadingBuilder,
+              debounceDuration: debounceDuration,
+              suggestionsBoxDecoration: suggestionsBoxDecoration,
+              suggestionsBoxController: suggestionsBoxController,
+              textFieldConfiguration: textFieldConfiguration.copyWith(
+                onChanged: (text) {
+                  state.didChange(text);
+                  textFieldConfiguration.onChanged(text);
+                },
+                controller: state._effectiveController,
+              ),
+              suggestionsBoxVerticalOffset: suggestionsBoxVerticalOffset,
+              onSuggestionSelected: onSuggestionSelected,
+              itemBuilder: itemBuilder,
+              suggestionsCallback: suggestionsCallback,
+              animationStart: animationStart,
+              animationDuration: animationDuration,
+              direction: direction,
+              hideOnLoading: hideOnLoading,
+              hideOnEmpty: hideOnEmpty,
+              hideOnError: hideOnError,
+              hideSuggestionsOnKeyboardHide: hideSuggestionsOnKeyboardHide,
+              keepSuggestionsOnLoading: keepSuggestionsOnLoading,
+              keepSuggestionsOnSuggestionSelected:
+              keepSuggestionsOnSuggestionSelected,
+              autoFlipDirection: autoFlipDirection,
+            );
+          });
 
   @override
   _CupertinoTypeAheadFormFieldState<T> createState() =>
@@ -466,29 +473,29 @@ class CupertinoTypeAheadField<T> extends StatefulWidget {
   /// Creates a [CupertinoTypeAheadField]
   CupertinoTypeAheadField(
       {Key key,
-      @required this.suggestionsCallback,
-      @required this.itemBuilder,
-      @required this.onSuggestionSelected,
-      this.textFieldConfiguration: const CupertinoTextFieldConfiguration(),
-      this.suggestionsBoxDecoration: const CupertinoSuggestionsBoxDecoration(),
-      this.debounceDuration: const Duration(milliseconds: 300),
-      this.suggestionsBoxController,
-      this.loadingBuilder,
-      this.noItemsFoundBuilder,
-      this.errorBuilder,
-      this.transitionBuilder,
-      this.animationStart: 0.25,
-      this.animationDuration: const Duration(milliseconds: 500),
-      this.getImmediateSuggestions: false,
-      this.suggestionsBoxVerticalOffset: 5.0,
-      this.direction: AxisDirection.down,
-      this.hideOnLoading: false,
-      this.hideOnEmpty: false,
-      this.hideOnError: false,
-      this.hideSuggestionsOnKeyboardHide: true,
-      this.keepSuggestionsOnLoading: true,
-      this.keepSuggestionsOnSuggestionSelected: false,
-      this.autoFlipDirection: false})
+        @required this.suggestionsCallback,
+        @required this.itemBuilder,
+        @required this.onSuggestionSelected,
+        this.textFieldConfiguration: const CupertinoTextFieldConfiguration(),
+        this.suggestionsBoxDecoration: const CupertinoSuggestionsBoxDecoration(),
+        this.debounceDuration: const Duration(milliseconds: 300),
+        this.suggestionsBoxController,
+        this.loadingBuilder,
+        this.noItemsFoundBuilder,
+        this.errorBuilder,
+        this.transitionBuilder,
+        this.animationStart: 0.25,
+        this.animationDuration: const Duration(milliseconds: 500),
+        this.getImmediateSuggestions: false,
+        this.suggestionsBoxVerticalOffset: 5.0,
+        this.direction: AxisDirection.down,
+        this.hideOnLoading: false,
+        this.hideOnEmpty: false,
+        this.hideOnError: false,
+        this.hideSuggestionsOnKeyboardHide: true,
+        this.keepSuggestionsOnLoading: true,
+        this.keepSuggestionsOnSuggestionSelected: false,
+        this.autoFlipDirection: false})
       : assert(suggestionsCallback != null),
         assert(itemBuilder != null),
         assert(onSuggestionSelected != null),
@@ -501,7 +508,7 @@ class CupertinoTypeAheadField<T> extends StatefulWidget {
         assert(suggestionsBoxDecoration != null),
         assert(suggestionsBoxVerticalOffset != null),
         assert(
-            direction == AxisDirection.down || direction == AxisDirection.up),
+        direction == AxisDirection.down || direction == AxisDirection.up),
         super(key: key);
 
   @override
@@ -527,10 +534,12 @@ class _CupertinoTypeAheadFieldState<T> extends State<CupertinoTypeAheadField<T>>
   Timer _resizeOnScrollTimer;
   // The rate at which the suggestion box will resize when the user is scrolling
   final Duration _resizeOnScrollRefreshRate = const Duration(milliseconds: 500);
+  // Will have a value if the typeahead is inside a scrollable widget
+  ScrollPosition _scrollPosition;
 
   // Keyboard detection
   KeyboardVisibilityNotification _keyboardVisibility =
-      new KeyboardVisibilityNotification();
+  new KeyboardVisibilityNotification();
   int _keyboardVisibilityId;
 
   @override
@@ -541,12 +550,14 @@ class _CupertinoTypeAheadFieldState<T> extends State<CupertinoTypeAheadField<T>>
 
   @override
   void dispose() {
+    this._suggestionsBox.close();
     this._suggestionsBox.widgetMounted = false;
     WidgetsBinding.instance.removeObserver(this);
     _keyboardVisibility.removeListener(_keyboardVisibilityId);
     _effectiveFocusNode.removeListener(_focusNodeListener);
     _focusNode?.dispose();
     _resizeOnScrollTimer?.cancel();
+    _scrollPosition?.removeListener(_scrollResizeListener);
     super.dispose();
   }
 
@@ -563,9 +574,19 @@ class _CupertinoTypeAheadFieldState<T> extends State<CupertinoTypeAheadField<T>>
       this._focusNode = FocusNode();
     }
 
-    this._suggestionsBox = _CupertinoSuggestionsBox(
-        context, widget.direction, widget.autoFlipDirection);
+    this._suggestionsBox = _CupertinoSuggestionsBox(context, widget.direction, widget.autoFlipDirection);
     widget.suggestionsBoxController?._suggestionsBox = this._suggestionsBox;
+    widget.suggestionsBoxController?._effectiveFocusNode = this._effectiveFocusNode;
+
+    this._focusNodeListener = () {
+      if (_effectiveFocusNode.hasFocus) {
+        this._suggestionsBox.open();
+      } else {
+        this._suggestionsBox.close();
+      }
+    };
+
+    this._effectiveFocusNode.addListener(_focusNodeListener);
 
     // hide suggestions box on keyboard closed
     this._keyboardVisibilityId = _keyboardVisibility.addNewListener(
@@ -576,48 +597,46 @@ class _CupertinoTypeAheadFieldState<T> extends State<CupertinoTypeAheadField<T>>
       },
     );
 
-    this._focusNodeListener = () {
-      if (_effectiveFocusNode.hasFocus) {
-        this._suggestionsBox.open();
-      } else {
-        this._suggestionsBox.close();
-      }
-    };
-
     WidgetsBinding.instance.addPostFrameCallback((duration) {
       if (mounted) {
         this._initOverlayEntry();
         // calculate initial suggestions list size
         this._suggestionsBox.resize();
 
-        this._effectiveFocusNode.addListener(_focusNodeListener);
-
         // in case we already missed the focus event
         if (this._effectiveFocusNode.hasFocus) {
           this._suggestionsBox.open();
         }
-
-        ScrollableState scrollableState = Scrollable.of(context);
-        if (scrollableState != null) {
-          // The TypeAheadField is inside a scrollable widget
-          scrollableState.position.isScrollingNotifier.addListener(() {
-            bool isScrolling =
-                scrollableState.position.isScrollingNotifier.value;
-            _resizeOnScrollTimer?.cancel();
-            if (isScrolling) {
-              // Scroll started
-              _resizeOnScrollTimer =
-                  Timer.periodic(_resizeOnScrollRefreshRate, (timer) {
-                _suggestionsBox.resize();
-              });
-            } else {
-              // Scroll finished
-              _suggestionsBox.resize();
-            }
-          });
-        }
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    ScrollableState scrollableState = Scrollable.of(context);
+    if (scrollableState != null) {
+      // The TypeAheadField is inside a scrollable widget
+      _scrollPosition = scrollableState.position;
+
+      _scrollPosition.removeListener(_scrollResizeListener);
+      _scrollPosition.isScrollingNotifier.addListener(_scrollResizeListener);
+    }
+  }
+
+  void _scrollResizeListener() {
+    bool isScrolling = _scrollPosition.isScrollingNotifier.value;
+    _resizeOnScrollTimer?.cancel();
+    if (isScrolling) {
+      // Scroll started
+      _resizeOnScrollTimer =
+          Timer.periodic(_resizeOnScrollRefreshRate, (timer) {
+            _suggestionsBox.resize();
+          });
+    } else {
+      // Scroll finished
+      _suggestionsBox.resize();
+    }
   }
 
   void _initOverlayEntry() {
@@ -656,14 +675,14 @@ class _CupertinoTypeAheadFieldState<T> extends State<CupertinoTypeAheadField<T>>
             widget.suggestionsBoxDecoration.constraints.maxWidth !=
                 double.infinity) {
           w = (widget.suggestionsBoxDecoration.constraints.minWidth +
-                  widget.suggestionsBoxDecoration.constraints.maxWidth) /
+              widget.suggestionsBoxDecoration.constraints.maxWidth) /
               2;
         } else if (widget.suggestionsBoxDecoration.constraints.minWidth !=
-                0.0 &&
+            0.0 &&
             widget.suggestionsBoxDecoration.constraints.minWidth > w) {
           w = widget.suggestionsBoxDecoration.constraints.minWidth;
         } else if (widget.suggestionsBoxDecoration.constraints.maxWidth !=
-                double.infinity &&
+            double.infinity &&
             widget.suggestionsBoxDecoration.constraints.maxWidth < w) {
           w = widget.suggestionsBoxDecoration.constraints.maxWidth;
         }
@@ -675,18 +694,18 @@ class _CupertinoTypeAheadFieldState<T> extends State<CupertinoTypeAheadField<T>>
           link: this._layerLink,
           showWhenUnlinked: false,
           offset: Offset(
-              0.0,
+              widget.suggestionsBoxDecoration.offsetX,
               _suggestionsBox.direction == AxisDirection.down
                   ? _suggestionsBox.textBoxHeight +
-                      widget.suggestionsBoxVerticalOffset
+                  widget.suggestionsBoxVerticalOffset
                   : _suggestionsBox.directionUpOffset),
           child: _suggestionsBox.direction == AxisDirection.down
               ? suggestionsList
               : FractionalTranslation(
-                  translation:
-                      Offset(0.0, -1.0), // visually flips list to go up
-                  child: suggestionsList,
-                ),
+            translation:
+            Offset(0.0, -1.0), // visually flips list to go up
+            child: suggestionsList,
+          ),
         ),
       );
     });
@@ -716,10 +735,12 @@ class _CupertinoTypeAheadFieldState<T> extends State<CupertinoTypeAheadField<T>>
         obscureText: widget.textFieldConfiguration.obscureText,
         autocorrect: widget.textFieldConfiguration.autocorrect,
         maxLines: widget.textFieldConfiguration.maxLines,
+        minLines: widget.textFieldConfiguration.minLines,
         maxLength: widget.textFieldConfiguration.maxLength,
         maxLengthEnforced: widget.textFieldConfiguration.maxLengthEnforced,
         onChanged: widget.textFieldConfiguration.onChanged,
         onEditingComplete: widget.textFieldConfiguration.onEditingComplete,
+        onTap: widget.textFieldConfiguration.onTap,
         onSubmitted: widget.textFieldConfiguration.onSubmitted,
         inputFormatters: widget.textFieldConfiguration.inputFormatters,
         enabled: widget.textFieldConfiguration.enabled,
@@ -728,6 +749,8 @@ class _CupertinoTypeAheadFieldState<T> extends State<CupertinoTypeAheadField<T>>
         cursorColor: widget.textFieldConfiguration.cursorColor,
         keyboardAppearance: widget.textFieldConfiguration.keyboardAppearance,
         scrollPadding: widget.textFieldConfiguration.scrollPadding,
+        enableInteractiveSelection:
+        widget.textFieldConfiguration.enableInteractiveSelection,
       ),
     );
   }
@@ -782,7 +805,7 @@ class _SuggestionsList<T> extends StatefulWidget {
 
 class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
     with SingleTickerProviderStateMixin {
-  List<T> _suggestions;
+  Iterable<T> _suggestions;
   VoidCallback _controllerListener;
   Timer _debounceTimer;
   bool _isLoading, _isQueued;
@@ -843,7 +866,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
         this._error = null;
       });
 
-      List<T> suggestions = [];
+      Iterable<T> suggestions = [];
       Object error;
 
       final Object callbackIdentity = Object();
@@ -862,7 +885,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
         // if it wasn't removed in the meantime
         setState(() {
           double animationStart = widget.animationStart;
-          if (error != null || suggestions == null || suggestions.length == 0) {
+          if (error != null || suggestions == null || suggestions.isEmpty) {
             animationStart = 1.0;
           }
           this._animationController.forward(from: animationStart);
@@ -878,8 +901,9 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
   @override
   void dispose() {
     _animationController.dispose();
+    // when this suggestions list is closed, text changes are no longer being listened for
+    widget.controller?.removeListener(this._controllerListener);
     super.dispose();
-    widget.controller.removeListener(this._controllerListener);
   }
 
   @override
@@ -900,7 +924,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
       } else {
         child = createErrorWidget();
       }
-    } else if (this._suggestions.length == 0) {
+    } else if (this._suggestions.isEmpty) {
       if (widget.hideOnEmpty) {
         child = Container(height: 0);
       } else {
@@ -913,11 +937,11 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
     var animationChild = widget.transitionBuilder != null
         ? widget.transitionBuilder(context, child, this._animationController)
         : SizeTransition(
-            axisAlignment: -1.0,
-            sizeFactor: CurvedAnimation(
-                parent: this._animationController, curve: Curves.fastOutSlowIn),
-            child: child,
-          );
+      axisAlignment: -1.0,
+      sizeFactor: CurvedAnimation(
+          parent: this._animationController, curve: Curves.fastOutSlowIn),
+      child: child,
+    );
 
     BoxConstraints constraints;
     if (widget.decoration.constraints == null) {
@@ -952,21 +976,21 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
       child = widget.loadingBuilder != null
           ? widget.loadingBuilder(context)
           : Container(
-              decoration: BoxDecoration(
-                color: CupertinoColors.white,
-                border: Border.all(
-                  color: CupertinoColors.extraLightBackgroundGray,
-                  width: 1.0,
-                ),
-              ),
-              child: Align(
-                alignment: Alignment.center,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: CupertinoActivityIndicator(),
-                ),
-              ),
-            );
+        decoration: BoxDecoration(
+          color: CupertinoColors.white,
+          border: Border.all(
+            color: CupertinoColors.extraLightBackgroundGray,
+            width: 1.0,
+          ),
+        ),
+        child: Align(
+          alignment: Alignment.center,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: CupertinoActivityIndicator(),
+          ),
+        ),
+      );
     }
 
     return child;
@@ -976,60 +1000,67 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
     return widget.errorBuilder != null
         ? widget.errorBuilder(context, this._error)
         : Container(
-            decoration: BoxDecoration(
-              color: CupertinoColors.white,
-              border: Border.all(
-                color: CupertinoColors.extraLightBackgroundGray,
-                width: 1.0,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Text(
-                'Error: ${this._error}',
-                textAlign: TextAlign.start,
-                style: TextStyle(
-                  color: CupertinoColors.destructiveRed,
-                  fontSize: 18.0,
-                ),
-              ),
-            ),
-          );
-  }
-
-  Widget createNoItemsFoundWidget() {
-    return widget.noItemsFoundBuilder != null
-        ? widget.noItemsFoundBuilder(context)
-        : Container(
-            decoration: BoxDecoration(
-              color: CupertinoColors.white,
-              border: Border.all(
-                color: CupertinoColors.extraLightBackgroundGray,
-                width: 1.0,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Text(
-                'No Items Found!',
-                textAlign: TextAlign.start,
-                style: TextStyle(
-                  color: CupertinoColors.inactiveGray,
-                  fontSize: 18.0,
-                ),
-              ),
-            ),
-          );
-  }
-
-  Widget createSuggestionsWidget() {
-    Widget child = Container(
       decoration: BoxDecoration(
         color: CupertinoColors.white,
         border: Border.all(
           color: CupertinoColors.extraLightBackgroundGray,
           width: 1.0,
         ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: Text(
+          'Error: ${this._error}',
+          textAlign: TextAlign.start,
+          style: TextStyle(
+            color: CupertinoColors.destructiveRed,
+            fontSize: 18.0,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget createNoItemsFoundWidget() {
+    return widget.noItemsFoundBuilder != null
+        ? widget.noItemsFoundBuilder(context)
+        : Container(
+      decoration: BoxDecoration(
+        color: CupertinoColors.white,
+        border: Border.all(
+          color: CupertinoColors.extraLightBackgroundGray,
+          width: 1.0,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: Text(
+          'No Items Found!',
+          textAlign: TextAlign.start,
+          style: TextStyle(
+            color: CupertinoColors.inactiveGray,
+            fontSize: 18.0,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget createSuggestionsWidget() {
+    Widget child = Container(
+      decoration: BoxDecoration(
+        color: widget.decoration.color != null
+            ? widget.decoration.color
+            : CupertinoColors.white,
+        border: widget.decoration.border != null
+            ? widget.decoration.border
+            : Border.all(
+          color: CupertinoColors.extraLightBackgroundGray,
+          width: 1.0,
+        ),
+        borderRadius: widget.decoration.borderRadius != null
+            ? widget.decoration.borderRadius
+            : null,
       ),
       child: ListView(
         padding: EdgeInsets.zero,
@@ -1040,6 +1071,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
             : true, // reverses the list to start at the bottom
         children: this._suggestions.map((T suggestion) {
           return GestureDetector(
+            behavior: HitTestBehavior.translucent,
             child: widget.itemBuilder(context, suggestion),
             onTap: () {
               widget.onSuggestionSelected(suggestion);
@@ -1065,11 +1097,21 @@ class CupertinoSuggestionsBoxDecoration {
 
   /// The constraints to be applied to the suggestions box
   final BoxConstraints constraints;
+  final Color color;
+  final BoxBorder border;
+  final BorderRadiusGeometry borderRadius;
+
+  /// Adds an offset to the suggestions box
+  final double offsetX;
 
   /// Creates a [CupertinoSuggestionsBoxDecoration]
   const CupertinoSuggestionsBoxDecoration({
     this.hasScrollbar: true,
     this.constraints,
+    this.color,
+    this.border,
+    this.borderRadius,
+    this.offsetX: 0.0
   });
 }
 
@@ -1096,10 +1138,12 @@ class CupertinoTextFieldConfiguration<T> {
   final bool obscureText;
   final bool autocorrect;
   final int maxLines;
+  final int minLines;
   final int maxLength;
   final bool maxLengthEnforced;
   final ValueChanged<String> onChanged;
   final VoidCallback onEditingComplete;
+  final GestureTapCallback onTap;
   final ValueChanged<String> onSubmitted;
   final List<TextInputFormatter> inputFormatters;
   final bool enabled;
@@ -1108,6 +1152,7 @@ class CupertinoTextFieldConfiguration<T> {
   final Color cursorColor;
   final Brightness keyboardAppearance;
   final EdgeInsets scrollPadding;
+  final bool enableInteractiveSelection;
 
   /// Creates a CupertinoTextFieldConfiguration
   const CupertinoTextFieldConfiguration({
@@ -1130,10 +1175,12 @@ class CupertinoTextFieldConfiguration<T> {
     this.obscureText = false,
     this.autocorrect = true,
     this.maxLines = 1,
+    this.minLines,
     this.maxLength,
     this.maxLengthEnforced = true,
     this.onChanged,
     this.onEditingComplete,
+    this.onTap,
     this.onSubmitted,
     this.inputFormatters,
     this.enabled,
@@ -1142,41 +1189,46 @@ class CupertinoTextFieldConfiguration<T> {
     this.cursorColor,
     this.keyboardAppearance,
     this.scrollPadding = const EdgeInsets.all(20.0),
+    this.enableInteractiveSelection = true,
   });
 
   /// Copies the [CupertinoTextFieldConfiguration] and only changes the specified properties
-  copyWith(
-      {TextEditingController controller,
-      FocusNode focusNode,
-      BoxDecoration decoration,
-      EdgeInsetsGeometry padding,
-      String placeholder,
-      Widget prefix,
-      OverlayVisibilityMode prefixMode,
-      Widget suffix,
-      OverlayVisibilityMode suffixMode,
-      OverlayVisibilityMode clearButtonMode,
-      TextInputType keyboardType,
-      TextInputAction textInputAction,
-      TextCapitalization textCapitalization,
-      TextStyle style,
-      TextAlign textAlign,
-      bool autofocus,
-      bool obscureText,
-      bool autocorrect,
-      int maxLines,
-      int maxLength,
-      bool maxLengthEnforced,
-      ValueChanged<String> onChanged,
-      VoidCallback onEditingComplete,
-      ValueChanged<String> onSubmitted,
-      List<TextInputFormatter> inputFormatters,
-      bool enabled,
-      double cursorWidth,
-      Radius cursorRadius,
-      Color cursorColor,
-      Brightness keyboardAppearance,
-      EdgeInsets scrollPadding}) {
+  copyWith({
+    TextEditingController controller,
+    FocusNode focusNode,
+    BoxDecoration decoration,
+    EdgeInsetsGeometry padding,
+    String placeholder,
+    Widget prefix,
+    OverlayVisibilityMode prefixMode,
+    Widget suffix,
+    OverlayVisibilityMode suffixMode,
+    OverlayVisibilityMode clearButtonMode,
+    TextInputType keyboardType,
+    TextInputAction textInputAction,
+    TextCapitalization textCapitalization,
+    TextStyle style,
+    TextAlign textAlign,
+    bool autofocus,
+    bool obscureText,
+    bool autocorrect,
+    int maxLines,
+    int minLines,
+    int maxLength,
+    bool maxLengthEnforced,
+    ValueChanged<String> onChanged,
+    VoidCallback onEditingComplete,
+    GestureTapCallback onTap,
+    ValueChanged<String> onSubmitted,
+    List<TextInputFormatter> inputFormatters,
+    bool enabled,
+    double cursorWidth,
+    Radius cursorRadius,
+    Color cursorColor,
+    Brightness keyboardAppearance,
+    EdgeInsets scrollPadding,
+    bool enableInteractiveSelection,
+  }) {
     return CupertinoTextFieldConfiguration(
       controller: controller ?? this.controller,
       focusNode: focusNode ?? this.focusNode,
@@ -1197,10 +1249,12 @@ class CupertinoTextFieldConfiguration<T> {
       obscureText: obscureText ?? this.obscureText,
       autocorrect: autocorrect ?? this.autocorrect,
       maxLines: maxLines ?? this.maxLines,
+      minLines: minLines ?? this.minLines,
       maxLength: maxLength ?? this.maxLength,
       maxLengthEnforced: maxLengthEnforced ?? this.maxLengthEnforced,
       onChanged: onChanged ?? this.onChanged,
       onEditingComplete: onEditingComplete ?? this.onEditingComplete,
+      onTap: onTap ?? this.onTap,
       onSubmitted: onSubmitted ?? this.onSubmitted,
       inputFormatters: inputFormatters ?? this.inputFormatters,
       enabled: enabled ?? this.enabled,
@@ -1209,6 +1263,8 @@ class CupertinoTextFieldConfiguration<T> {
       cursorColor: cursorColor ?? this.cursorColor,
       keyboardAppearance: keyboardAppearance ?? this.keyboardAppearance,
       scrollPadding: scrollPadding ?? this.scrollPadding,
+      enableInteractiveSelection:
+      enableInteractiveSelection ?? this.enableInteractiveSelection,
     );
   }
 }
@@ -1224,7 +1280,7 @@ class _CupertinoSuggestionsBox {
   OverlayEntry _overlayEntry;
   AxisDirection direction;
 
-  bool _isOpened = false;
+  bool isOpened = false;
   bool widgetMounted = true;
   double maxHeight = 300.0;
   double textBoxWidth = 100.0;
@@ -1235,21 +1291,21 @@ class _CupertinoSuggestionsBox {
       : desiredDirection = direction;
 
   void open() {
-    if (this._isOpened) return;
+    if (this.isOpened) return;
     assert(this._overlayEntry != null);
     Overlay.of(context).insert(this._overlayEntry);
-    this._isOpened = true;
+    this.isOpened = true;
   }
 
   void close() {
-    if (!this._isOpened) return;
+    if (!this.isOpened) return;
     assert(this._overlayEntry != null);
     this._overlayEntry.remove();
-    this._isOpened = false;
+    this.isOpened = false;
   }
 
   void toggle() {
-    if (this._isOpened) {
+    if (this.isOpened) {
       this.close();
     } else {
       this.open();
@@ -1359,9 +1415,9 @@ class _CupertinoSuggestionsBox {
       double textBoxAbsY) {
     return direction == AxisDirection.down
         ? _calculateMaxHeightDown(box, widget, windowHeight, rootMediaQuery,
-            keyboardHeight, textBoxAbsY)
+        keyboardHeight, textBoxAbsY)
         : _calculateMaxHeightUp(box, widget, windowHeight, rootMediaQuery,
-            keyboardHeight, textBoxAbsY);
+        keyboardHeight, textBoxAbsY);
   }
 
   double _calculateMaxHeightDown(
@@ -1404,11 +1460,11 @@ class _CupertinoSuggestionsBox {
 
     return textBoxAbsY > keyboardAbsY
         ? keyboardAbsY -
-            unsafeAreaHeight -
-            2 * widget.suggestionsBoxVerticalOffset
+        unsafeAreaHeight -
+        2 * widget.suggestionsBoxVerticalOffset
         : textBoxAbsY -
-            unsafeAreaHeight -
-            2 * widget.suggestionsBoxVerticalOffset;
+        unsafeAreaHeight -
+        2 * widget.suggestionsBoxVerticalOffset;
   }
 
   Future<void> onChangeMetrics() async {
@@ -1422,24 +1478,29 @@ class _CupertinoSuggestionsBox {
 /// property to manually control the suggestions box
 class CupertinoSuggestionsBoxController {
   _CupertinoSuggestionsBox _suggestionsBox;
+  FocusNode _effectiveFocusNode;
 
   /// Opens the suggestions box
   void open() {
-    _suggestionsBox?.open();
+    _effectiveFocusNode.requestFocus();
   }
 
   /// Closes the suggestions box
   void close() {
-    _suggestionsBox?.close();
+    _effectiveFocusNode.unfocus();
   }
 
   /// Opens the suggestions box if closed and vice-versa
   void toggle() {
-    _suggestionsBox?.toggle();
+    if (_suggestionsBox.isOpened) {
+      close();
+    } else {
+      open();
+    }
   }
 
   /// Recalculates the height of the suggestions box
   void resize() {
-    _suggestionsBox?.resize();
+    _suggestionsBox.resize();
   }
 }

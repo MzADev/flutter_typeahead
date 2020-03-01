@@ -231,9 +231,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:keyboard_visibility/keyboard_visibility.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 
-typedef FutureOr<List<T>> SuggestionsCallback<T>(String pattern);
+typedef FutureOr<Iterable<T>> SuggestionsCallback<T>(String pattern);
 typedef Widget ItemBuilder<T>(BuildContext context, T itemData);
 typedef void SuggestionSelectionCallback<T>(T suggestion);
 typedef Widget ErrorBuilder(BuildContext context, Object error);
@@ -277,6 +277,8 @@ class TypeAheadFormField<T> extends FormField<String> {
       AnimationTransitionBuilder transitionBuilder,
       Duration animationDuration: const Duration(milliseconds: 500),
       double animationStart: 0.25,
+      double topPadding: 0.0,
+      ScrollPhysics scrollPhysics: const BouncingScrollPhysics(),
       AxisDirection direction: AxisDirection.down,
       bool hideOnLoading: false,
       bool hideOnEmpty: false,
@@ -322,6 +324,8 @@ class TypeAheadFormField<T> extends FormField<String> {
                 suggestionsCallback: suggestionsCallback,
                 animationStart: animationStart,
                 animationDuration: animationDuration,
+                topPadding: topPadding,
+                scrollPhysics: scrollPhysics,
                 direction: direction,
                 hideOnLoading: hideOnLoading,
                 hideOnEmpty: hideOnEmpty,
@@ -589,6 +593,10 @@ class TypeAheadField<T> extends StatefulWidget {
   /// Defaults to 0.25.
   final double animationStart;
 
+  final double topPadding;
+
+  final ScrollPhysics scrollPhysics;
+
   /// The configuration of the [TextField](https://docs.flutter.io/flutter/material/TextField-class.html)
   /// that the TypeAhead widget displays
   final TextFieldConfiguration textFieldConfiguration;
@@ -674,6 +682,8 @@ class TypeAheadField<T> extends StatefulWidget {
       this.errorBuilder,
       this.transitionBuilder,
       this.animationStart: 0.25,
+      this.topPadding: 0.0,
+      this.scrollPhysics: const BouncingScrollPhysics(),
       this.animationDuration: const Duration(milliseconds: 500),
       this.getImmediateSuggestions: false,
       this.suggestionsBoxVerticalOffset: 5.0,
@@ -708,7 +718,7 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
     with WidgetsBindingObserver {
   FocusNode _focusNode;
   TextEditingController _textEditingController;
-  SuggestionsBox _suggestionsBox;
+  _SuggestionsBox _suggestionsBox;
 
   TextEditingController get _effectiveController =>
       widget.textFieldConfiguration.controller ?? _textEditingController;
@@ -725,6 +735,9 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
   // The rate at which the suggestion box will resize when the user is scrolling
   final Duration _resizeOnScrollRefreshRate = const Duration(milliseconds: 500);
 
+  // Will have a value if the typeahead is inside a scrollable widget
+  ScrollPosition _scrollPosition;
+
   // Keyboard detection
   KeyboardVisibilityNotification _keyboardVisibility =
       new KeyboardVisibilityNotification();
@@ -738,12 +751,14 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
 
   @override
   void dispose() {
+    this._suggestionsBox.close();
     this._suggestionsBox.widgetMounted = false;
     WidgetsBinding.instance.removeObserver(this);
     _keyboardVisibility.removeListener(_keyboardVisibilityId);
     _effectiveFocusNode.removeListener(_focusNodeListener);
     _focusNode?.dispose();
     _resizeOnScrollTimer?.cancel();
+    _scrollPosition?.removeListener(_scrollResizeListener);
     super.dispose();
   }
 
@@ -761,8 +776,20 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
     }
 
     this._suggestionsBox =
-        SuggestionsBox(context, widget.direction, widget.autoFlipDirection);
-    widget.suggestionsBoxController?.suggestionsBox = this._suggestionsBox;
+        _SuggestionsBox(context, widget.direction, widget.autoFlipDirection);
+    widget.suggestionsBoxController?._suggestionsBox = this._suggestionsBox;
+    widget.suggestionsBoxController?._effectiveFocusNode =
+        this._effectiveFocusNode;
+
+    this._focusNodeListener = () {
+      if (_effectiveFocusNode.hasFocus) {
+        this._suggestionsBox.open();
+      } else {
+        this._suggestionsBox.close();
+      }
+    };
+
+    this._effectiveFocusNode.addListener(_focusNodeListener);
 
     // hide suggestions box on keyboard closed
     this._keyboardVisibilityId = _keyboardVisibility.addNewListener(
@@ -773,48 +800,46 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
       },
     );
 
-    this._focusNodeListener = () {
-      if (_effectiveFocusNode.hasFocus) {
-        this._suggestionsBox.open();
-      } else {
-        this._suggestionsBox.close();
-      }
-    };
-
     WidgetsBinding.instance.addPostFrameCallback((duration) {
       if (mounted) {
         this._initOverlayEntry();
         // calculate initial suggestions list size
         this._suggestionsBox.resize();
 
-        this._effectiveFocusNode.addListener(_focusNodeListener);
-
         // in case we already missed the focus event
         if (this._effectiveFocusNode.hasFocus) {
           this._suggestionsBox.open();
         }
-
-        ScrollableState scrollableState = Scrollable.of(context);
-        if (scrollableState != null) {
-          // The TypeAheadField is inside a scrollable widget
-          scrollableState.position.isScrollingNotifier.addListener(() {
-            bool isScrolling =
-                scrollableState.position.isScrollingNotifier.value;
-            _resizeOnScrollTimer?.cancel();
-            if (isScrolling) {
-              // Scroll started
-              _resizeOnScrollTimer =
-                  Timer.periodic(_resizeOnScrollRefreshRate, (timer) {
-                _suggestionsBox.resize();
-              });
-            } else {
-              // Scroll finished
-              _suggestionsBox.resize();
-            }
-          });
-        }
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    ScrollableState scrollableState = Scrollable.of(context);
+    if (scrollableState != null) {
+      // The TypeAheadField is inside a scrollable widget
+      _scrollPosition = scrollableState.position;
+
+      _scrollPosition.removeListener(_scrollResizeListener);
+      _scrollPosition.isScrollingNotifier.addListener(_scrollResizeListener);
+    }
+  }
+
+  void _scrollResizeListener() {
+    bool isScrolling = _scrollPosition.isScrollingNotifier.value;
+    _resizeOnScrollTimer?.cancel();
+    if (isScrolling) {
+      // Scroll started
+      _resizeOnScrollTimer =
+          Timer.periodic(_resizeOnScrollRefreshRate, (timer) {
+        _suggestionsBox.resize();
+      });
+    } else {
+      // Scroll finished
+      _suggestionsBox.resize();
+    }
   }
 
   void _initOverlayEntry() {
@@ -831,6 +856,8 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
         suggestionsCallback: widget.suggestionsCallback,
         animationDuration: widget.animationDuration,
         animationStart: widget.animationStart,
+        topPadding: widget.topPadding,
+        scrollPhysics: widget.scrollPhysics,
         getImmediateSuggestions: widget.getImmediateSuggestions,
         onSuggestionSelected: (T selection) {
           if (!widget.keepSuggestionsOnSuggestionSelected) {
@@ -872,7 +899,7 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
           link: this._layerLink,
           showWhenUnlinked: false,
           offset: Offset(
-              0.0,
+              widget.suggestionsBoxDecoration.offsetX,
               _suggestionsBox.direction == AxisDirection.down
                   ? _suggestionsBox.textBoxHeight +
                       widget.suggestionsBoxVerticalOffset
@@ -905,12 +932,14 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
         inputFormatters: widget.textFieldConfiguration.inputFormatters,
         autocorrect: widget.textFieldConfiguration.autocorrect,
         maxLines: widget.textFieldConfiguration.maxLines,
+        minLines: widget.textFieldConfiguration.minLines,
         maxLength: widget.textFieldConfiguration.maxLength,
         maxLengthEnforced: widget.textFieldConfiguration.maxLengthEnforced,
         obscureText: widget.textFieldConfiguration.obscureText,
         onChanged: widget.textFieldConfiguration.onChanged,
         onSubmitted: widget.textFieldConfiguration.onSubmitted,
         onEditingComplete: widget.textFieldConfiguration.onEditingComplete,
+        onTap: widget.textFieldConfiguration.onTap,
         scrollPadding: widget.textFieldConfiguration.scrollPadding,
         textInputAction: widget.textFieldConfiguration.textInputAction,
         textCapitalization: widget.textFieldConfiguration.textCapitalization,
@@ -919,13 +948,15 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
         cursorRadius: widget.textFieldConfiguration.cursorRadius,
         cursorColor: widget.textFieldConfiguration.cursorColor,
         textDirection: widget.textFieldConfiguration.textDirection,
+        enableInteractiveSelection:
+            widget.textFieldConfiguration.enableInteractiveSelection,
       ),
     );
   }
 }
 
 class _SuggestionsList<T> extends StatefulWidget {
-  final SuggestionsBox suggestionsBox;
+  final _SuggestionsBox suggestionsBox;
   final TextEditingController controller;
   final bool getImmediateSuggestions;
   final SuggestionSelectionCallback<T> onSuggestionSelected;
@@ -939,6 +970,8 @@ class _SuggestionsList<T> extends StatefulWidget {
   final AnimationTransitionBuilder transitionBuilder;
   final Duration animationDuration;
   final double animationStart;
+  final double topPadding;
+  final ScrollPhysics scrollPhysics;
   final AxisDirection direction;
   final bool hideOnLoading;
   final bool hideOnEmpty;
@@ -965,6 +998,8 @@ class _SuggestionsList<T> extends StatefulWidget {
     this.hideOnEmpty,
     this.hideOnError,
     this.keepSuggestionsOnLoading,
+    this.topPadding,
+    this.scrollPhysics,
   });
 
   @override
@@ -973,7 +1008,7 @@ class _SuggestionsList<T> extends StatefulWidget {
 
 class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
     with SingleTickerProviderStateMixin {
-  List<T> _suggestions;
+  Iterable<T> _suggestions;
   VoidCallback _controllerListener;
   Timer _debounceTimer;
   bool _isLoading, _isQueued;
@@ -1034,7 +1069,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
         this._error = null;
       });
 
-      List<T> suggestions = [];
+      Iterable<T> suggestions = [];
       Object error;
 
       final Object callbackIdentity = Object();
@@ -1053,7 +1088,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
         // if it wasn't removed in the meantime
         setState(() {
           double animationStart = widget.animationStart;
-          if (error != null || suggestions == null || suggestions.length == 0) {
+          if (error != null || suggestions == null || suggestions.isEmpty) {
             animationStart = 1.0;
           }
           this._animationController.forward(from: animationStart);
@@ -1069,8 +1104,9 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
   @override
   void dispose() {
     _animationController.dispose();
+    // when this suggestions list is closed, text changes are no longer being listened for
+    widget.controller?.removeListener(this._controllerListener);
     super.dispose();
-    widget.controller.removeListener(this._controllerListener);
   }
 
   @override
@@ -1089,14 +1125,12 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
       if (widget.hideOnError) {
         child = Container(height: 0);
       } else {
-        child = Container();
-//        child = createErrorWidget();
+        child = createErrorWidget();
       }
-    } else if (this._suggestions.length == 0) {
+    } else if (this._suggestions.isEmpty) {
       if (widget.hideOnEmpty) {
         child = Container(height: 0);
       } else {
-        //color mishe dad
         child = createNoItemsFoundWidget();
       }
     } else {
@@ -1109,8 +1143,10 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
             axisAlignment: -1.0,
             sizeFactor: CurvedAnimation(
                 parent: this._animationController, curve: Curves.fastOutSlowIn),
-            child: child,
-      //color mishe dad
+            child: Padding(
+              padding: EdgeInsets.only(top: widget.topPadding),
+              child: child,
+            ),
           );
 
     BoxConstraints constraints;
@@ -1128,13 +1164,11 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
     }
 
     var container = Material(
-//      elevation: widget.decoration.elevation,
-//      color: widget.decoration.color,
-//      shape: widget.decoration.shape,
-//      borderRadius: widget.decoration.borderRadius,
-//      shadowColor: widget.decoration.shadowColor,
-//    color: Colors.blueAccent,
-      borderRadius: BorderRadius.circular(20),
+      elevation: widget.decoration.elevation,
+      color: widget.decoration.color,
+      shape: widget.decoration.shape,
+      borderRadius: widget.decoration.borderRadius,
+      shadowColor: widget.decoration.shadowColor,
       child: ConstrainedBox(
         constraints: constraints,
         child: animationChild,
@@ -1165,11 +1199,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
             );
     }
 
-//    return Container(
-//        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20),
-//        color: Colors.orange),
-//        child: child);
-  return child;
+    return child;
   }
 
   Widget createErrorWidget() {
@@ -1188,22 +1218,19 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
     return widget.noItemsFoundBuilder != null
         ? widget.noItemsFoundBuilder(context)
         : Padding(
-//            padding: const EdgeInsets.symmetric(vertical: 8.0),
-    padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Text(
-              'نتیجه‌ای یافت نشد!',
+              'No Items Found!',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Theme.of(context).disabledColor,
-                fontSize: 14.0,
-                fontFamily: 'iranyekan',
-              ),
+                  color: Theme.of(context).disabledColor, fontSize: 18.0),
             ),
           );
   }
 
   Widget createSuggestionsWidget() {
     Widget child = ListView(
+      physics: widget.scrollPhysics,
       padding: EdgeInsets.zero,
       primary: false,
       shrinkWrap: true,
@@ -1263,6 +1290,9 @@ class SuggestionsBoxDecoration {
   /// The constraints to be applied to the suggestions box
   final BoxConstraints constraints;
 
+  /// Adds an offset to the suggestions box
+  final double offsetX;
+
   /// Creates a SuggestionsBoxDecoration
   const SuggestionsBoxDecoration(
       {this.elevation: 4.0,
@@ -1271,7 +1301,8 @@ class SuggestionsBoxDecoration {
       this.hasScrollbar: true,
       this.borderRadius,
       this.shadowColor: const Color(0xFF000000),
-      this.constraints})
+      this.constraints,
+      this.offsetX: 0.0})
       : assert(shadowColor != null),
         assert(elevation != null);
 }
@@ -1357,6 +1388,11 @@ class TextFieldConfiguration<T> {
   /// Same as [TextField.maxLines](https://docs.flutter.io/flutter/material/TextField/maxLines.html)
   final int maxLines;
 
+  /// The minimum number of lines to occupy when the content spans fewer lines.
+  ///
+  /// Same as [TextField.minLines](https://docs.flutter.io/flutter/material/TextField/minLines.html)
+  final int minLines;
+
   /// The maximum number of characters (Unicode scalar values) to allow in the
   /// text field.
   ///
@@ -1410,6 +1446,11 @@ class TextFieldConfiguration<T> {
   /// Same as [TextField.onEditingComplete](https://docs.flutter.io/flutter/material/TextField/onEditingComplete.html)
   final VoidCallback onEditingComplete;
 
+  /// Called for each distinct tap except for every second tap of a double tap.
+  ///
+  /// Same as [TextField.onTap](https://docs.flutter.io/flutter/material/TextField/onTap.html)
+  final GestureTapCallback onTap;
+
   /// Configures padding to edges surrounding a Scrollable when the Textfield scrolls into view.
   ///
   /// Same as [TextField.scrollPadding](https://docs.flutter.io/flutter/material/TextField/scrollPadding.html)
@@ -1425,33 +1466,39 @@ class TextFieldConfiguration<T> {
   /// Same as [TextField.textInputAction](https://docs.flutter.io/flutter/material/TextField/textInputAction.html)
   final TextInputAction textInputAction;
 
+  final bool enableInteractiveSelection;
+
   /// Creates a TextFieldConfiguration
-  const TextFieldConfiguration(
-      {this.decoration: const InputDecoration(),
-      this.style,
-      this.controller,
-      this.onChanged,
-      this.onSubmitted,
-      this.obscureText: false,
-      this.maxLengthEnforced: true,
-      this.maxLength,
-      this.maxLines: 1,
-      this.autocorrect: true,
-      this.inputFormatters,
-      this.autofocus: false,
-      this.keyboardType: TextInputType.text,
-      this.enabled: true,
-      this.textAlign: TextAlign.start,
-      this.focusNode,
-      this.cursorColor,
-      this.cursorRadius,
-      this.textInputAction,
-      this.textCapitalization: TextCapitalization.none,
-      this.cursorWidth: 2.0,
-      this.keyboardAppearance,
-      this.onEditingComplete,
-      this.textDirection,
-      this.scrollPadding: const EdgeInsets.all(20.0)});
+  const TextFieldConfiguration({
+    this.decoration: const InputDecoration(),
+    this.style,
+    this.controller,
+    this.onChanged,
+    this.onSubmitted,
+    this.obscureText: false,
+    this.maxLengthEnforced: true,
+    this.maxLength,
+    this.maxLines: 1,
+    this.minLines,
+    this.autocorrect: true,
+    this.inputFormatters,
+    this.autofocus: false,
+    this.keyboardType: TextInputType.text,
+    this.enabled: true,
+    this.textAlign: TextAlign.start,
+    this.focusNode,
+    this.cursorColor,
+    this.cursorRadius,
+    this.textInputAction,
+    this.textCapitalization: TextCapitalization.none,
+    this.cursorWidth: 2.0,
+    this.keyboardAppearance,
+    this.onEditingComplete,
+    this.onTap,
+    this.textDirection,
+    this.scrollPadding: const EdgeInsets.all(20.0),
+    this.enableInteractiveSelection: true,
+  });
 
   /// Copies the [TextFieldConfiguration] and only changes the specified
   /// properties
@@ -1465,6 +1512,7 @@ class TextFieldConfiguration<T> {
       bool maxLengthEnforced,
       int maxLength,
       int maxLines,
+      int minLines,
       bool autocorrect,
       List<TextInputFormatter> inputFormatters,
       bool autofocus,
@@ -1477,40 +1525,47 @@ class TextFieldConfiguration<T> {
       double cursorWidth,
       Brightness keyboardAppearance,
       VoidCallback onEditingComplete,
+      GestureTapCallback onTap,
       EdgeInsets scrollPadding,
       TextCapitalization textCapitalization,
       TextDirection textDirection,
-      TextInputAction textInputAction}) {
+      TextInputAction textInputAction,
+      bool enableInteractiveSelection}) {
     return TextFieldConfiguration(
-        decoration: decoration ?? this.decoration,
-        style: style ?? this.style,
-        controller: controller ?? this.controller,
-        onChanged: onChanged ?? this.onChanged,
-        onSubmitted: onSubmitted ?? this.onSubmitted,
-        obscureText: obscureText ?? this.obscureText,
-        maxLengthEnforced: maxLengthEnforced ?? this.maxLengthEnforced,
-        maxLength: maxLength ?? this.maxLength,
-        maxLines: maxLines ?? this.maxLines,
-        autocorrect: autocorrect ?? this.autocorrect,
-        inputFormatters: inputFormatters ?? this.inputFormatters,
-        autofocus: autofocus ?? this.autofocus,
-        keyboardType: keyboardType ?? this.keyboardType,
-        enabled: enabled ?? this.enabled,
-        textAlign: textAlign ?? this.textAlign,
-        focusNode: focusNode ?? this.focusNode,
-        cursorColor: cursorColor ?? this.cursorColor,
-        cursorRadius: cursorRadius ?? this.cursorRadius,
-        cursorWidth: cursorWidth ?? this.cursorWidth,
-        keyboardAppearance: keyboardAppearance ?? this.keyboardAppearance,
-        onEditingComplete: onEditingComplete ?? this.onEditingComplete,
-        scrollPadding: scrollPadding ?? this.scrollPadding,
-        textCapitalization: textCapitalization ?? this.textCapitalization,
-        textInputAction: textInputAction ?? this.textInputAction,
-        textDirection: textDirection ?? this.textDirection);
+      decoration: decoration ?? this.decoration,
+      style: style ?? this.style,
+      controller: controller ?? this.controller,
+      onChanged: onChanged ?? this.onChanged,
+      onSubmitted: onSubmitted ?? this.onSubmitted,
+      obscureText: obscureText ?? this.obscureText,
+      maxLengthEnforced: maxLengthEnforced ?? this.maxLengthEnforced,
+      maxLength: maxLength ?? this.maxLength,
+      maxLines: maxLines ?? this.maxLines,
+      minLines: minLines ?? this.minLines,
+      autocorrect: autocorrect ?? this.autocorrect,
+      inputFormatters: inputFormatters ?? this.inputFormatters,
+      autofocus: autofocus ?? this.autofocus,
+      keyboardType: keyboardType ?? this.keyboardType,
+      enabled: enabled ?? this.enabled,
+      textAlign: textAlign ?? this.textAlign,
+      focusNode: focusNode ?? this.focusNode,
+      cursorColor: cursorColor ?? this.cursorColor,
+      cursorRadius: cursorRadius ?? this.cursorRadius,
+      cursorWidth: cursorWidth ?? this.cursorWidth,
+      keyboardAppearance: keyboardAppearance ?? this.keyboardAppearance,
+      onEditingComplete: onEditingComplete ?? this.onEditingComplete,
+      onTap: onTap ?? this.onTap,
+      scrollPadding: scrollPadding ?? this.scrollPadding,
+      textCapitalization: textCapitalization ?? this.textCapitalization,
+      textInputAction: textInputAction ?? this.textInputAction,
+      textDirection: textDirection ?? this.textDirection,
+      enableInteractiveSelection:
+          enableInteractiveSelection ?? this.enableInteractiveSelection,
+    );
   }
 }
 
-class SuggestionsBox {
+class _SuggestionsBox {
   static const int waitMetricsTimeoutMillis = 1000;
   static const double minOverlaySpace = 64.0;
 
@@ -1528,7 +1583,7 @@ class SuggestionsBox {
   double textBoxHeight = 100.0;
   double directionUpOffset;
 
-  SuggestionsBox(this.context, this.direction, this.autoFlipDirection)
+  _SuggestionsBox(this.context, this.direction, this.autoFlipDirection)
       : desiredDirection = direction;
 
   void open() {
@@ -1718,25 +1773,30 @@ class SuggestionsBox {
 /// Supply an instance of this class to the [TypeAhead.suggestionsBoxController]
 /// property to manually control the suggestions box
 class SuggestionsBoxController {
-  SuggestionsBox suggestionsBox;
+  _SuggestionsBox _suggestionsBox;
+  FocusNode _effectiveFocusNode;
 
   /// Opens the suggestions box
   void open() {
-    suggestionsBox?.open();
+    _effectiveFocusNode.requestFocus();
   }
 
   /// Closes the suggestions box
   void close() {
-    suggestionsBox?.close();
+    _effectiveFocusNode.unfocus();
   }
 
   /// Opens the suggestions box if closed and vice-versa
   void toggle() {
-    suggestionsBox?.toggle();
+    if (_suggestionsBox.isOpened) {
+      close();
+    } else {
+      open();
+    }
   }
 
   /// Recalculates the height of the suggestions box
   void resize() {
-    suggestionsBox?.resize();
+    _suggestionsBox.resize();
   }
 }
