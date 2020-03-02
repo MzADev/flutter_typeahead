@@ -48,6 +48,7 @@ class NavigationExample extends StatelessWidget {
           TypeAheadField(
             suggestionsBoxVerticalOffset: 0.0,
             topPadding: 30,
+            bottomPadding: 60,
             suggestionsBoxDecoration: SuggestionsBoxDecoration(
                 color: Colors.transparent, elevation: 0, hasScrollbar: false),
             textFieldConfiguration: TextFieldConfiguration(
@@ -62,11 +63,51 @@ class NavigationExample extends StatelessWidget {
             suggestionsCallback: (pattern) async {
               return await BackendService.getSuggestions(pattern);
             },
+            hideSuggestionsOnKeyboardHide: false,
             itemBuilder: (context, suggestion) {
-              return ListTile(
-                leading: Icon(Icons.shopping_cart),
-                title: Text(suggestion['name']),
-                subtitle: Text('\$${suggestion['price']}'),
+              return Column(
+                children: <Widget>[
+                  ListTile(
+                    leading: Icon(Icons.shopping_cart),
+                    title: Text(suggestion['name']),
+                    subtitle: Text('\$${suggestion['price']}'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.shopping_cart),
+                    title: Text(suggestion['name']),
+                    subtitle: Text('\$${suggestion['price']}'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.shopping_cart),
+                    title: Text(suggestion['name']),
+                    subtitle: Text('\$${suggestion['price']}'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.shopping_cart),
+                    title: Text(suggestion['name']),
+                    subtitle: Text('\$${suggestion['price']}'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.shopping_cart),
+                    title: Text(suggestion['name']),
+                    subtitle: Text('\$${suggestion['price']}'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.shopping_cart),
+                    title: Text(suggestion['name']),
+                    subtitle: Text('\$${suggestion['price']}'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.shopping_cart),
+                    title: Text(suggestion['name']),
+                    subtitle: Text('\$${suggestion['price']}'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.shopping_cart),
+                    title: Text(suggestion['name']),
+                    subtitle: Text('\$${suggestion['price']}'),
+                  ),
+                ],
               );
             },
             onSuggestionSelected: (suggestion) {
