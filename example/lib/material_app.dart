@@ -45,75 +45,57 @@ class NavigationExample extends StatelessWidget {
           SizedBox(
             height: 10.0,
           ),
-          TypeAheadField(
-            suggestionsBoxVerticalOffset: 0.0,
-            topPadding: 30,
-            bottomPadding: 60,
-            suggestionsBoxDecoration: SuggestionsBoxDecoration(
-                color: Colors.transparent, elevation: 0, hasScrollbar: false),
-            textFieldConfiguration: TextFieldConfiguration(
-              autofocus: true,
-              style: DefaultTextStyle.of(context)
-                  .style
-                  .copyWith(fontStyle: FontStyle.italic),
-              decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'What are you looking for?'),
-            ),
-            suggestionsCallback: (pattern) async {
-              return await BackendService.getSuggestions(pattern);
-            },
-            hideSuggestionsOnKeyboardHide: false,
-            itemBuilder: (context, suggestion) {
-              return Column(
-                children: <Widget>[
-                  ListTile(
-                    leading: Icon(Icons.shopping_cart),
-                    title: Text(suggestion['name']),
-                    subtitle: Text('\$${suggestion['price']}'),
+          Row(
+            children: <Widget>[
+              IconButton(
+                padding: const EdgeInsets.only(right: 8.0),
+                icon: const Icon(Icons.search, color: Colors.grey),
+                onPressed: () {},
+              ),
+              Flexible(
+                child: TypeAheadField(
+                  suggestionsBoxVerticalOffset: 0.0,
+                  topPadding: 30,
+                  bottomPadding: 60,
+                  suggestionsBoxDecoration: SuggestionsBoxDecoration(
+                      color: Colors.transparent, elevation: 0, hasScrollbar: false),
+                  textFieldConfiguration: TextFieldConfiguration(
+                    autofocus: true,
+                    style: DefaultTextStyle.of(context)
+                        .style
+                        .copyWith(fontStyle: FontStyle.italic),
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'What are you looking for?'),
                   ),
-                  ListTile(
-                    leading: Icon(Icons.shopping_cart),
-                    title: Text(suggestion['name']),
-                    subtitle: Text('\$${suggestion['price']}'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.shopping_cart),
-                    title: Text(suggestion['name']),
-                    subtitle: Text('\$${suggestion['price']}'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.shopping_cart),
-                    title: Text(suggestion['name']),
-                    subtitle: Text('\$${suggestion['price']}'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.shopping_cart),
-                    title: Text(suggestion['name']),
-                    subtitle: Text('\$${suggestion['price']}'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.shopping_cart),
-                    title: Text(suggestion['name']),
-                    subtitle: Text('\$${suggestion['price']}'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.shopping_cart),
-                    title: Text(suggestion['name']),
-                    subtitle: Text('\$${suggestion['price']}'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.shopping_cart),
-                    title: Text(suggestion['name']),
-                    subtitle: Text('\$${suggestion['price']}'),
-                  ),
-                ],
-              );
-            },
-            onSuggestionSelected: (suggestion) {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => ProductPage(product: suggestion)));
-            },
+                  suggestionsCallback: (pattern) async {
+                    return await BackendService.getSuggestions(pattern);
+                  },
+                  hideSuggestionsOnKeyboardHide: false,
+                  itemBuilder: (context, suggestion) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: <Widget>[
+                            Icon(Icons.shopping_cart),
+                            Text(suggestion['name'] + "hahhhhahahah"),
+                            Text('\$${suggestion['price']}'),
+                        ],
+                      ),
+                    );
+                  },
+                  onSuggestionSelected: (suggestion) {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => ProductPage(product: suggestion)));
+                  },
+                ),
+              ),
+              IconButton(
+                padding: const EdgeInsets.only(left: 8.0),
+                icon: const Icon(Icons.close, color: Colors.grey),
+                onPressed: () {},
+              ),
+            ],
           ),
         ],
       ),

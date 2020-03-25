@@ -898,9 +898,7 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
         }
       }
 
-      return Positioned(
-        width: w,
-        child: CompositedTransformFollower(
+      return CompositedTransformFollower(
           link: this._layerLink,
           showWhenUnlinked: false,
           offset: Offset(
@@ -916,7 +914,6 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
                       Offset(0.0, -1.0), // visually flips list to go up
                   child: suggestionsList,
                 ),
-        ),
       );
     });
   }
