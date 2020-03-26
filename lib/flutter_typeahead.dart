@@ -898,23 +898,35 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
         }
       }
 
-      return CompositedTransformFollower(
-          link: this._layerLink,
-          showWhenUnlinked: false,
-          offset: Offset(
-              widget.suggestionsBoxDecoration.offsetX,
-              _suggestionsBox.direction == AxisDirection.down
-                  ? _suggestionsBox.textBoxHeight +
-                      widget.suggestionsBoxVerticalOffset
-                  : _suggestionsBox.directionUpOffset),
-          child: _suggestionsBox.direction == AxisDirection.down
-              ? suggestionsList
-              : FractionalTranslation(
-                  translation:
-                      Offset(0.0, -1.0), // visually flips list to go up
-                  child: suggestionsList,
-                ),
+      return Positioned(
+        width: w,
+        child: _suggestionsBox.direction == AxisDirection.down
+            ? suggestionsList
+            : FractionalTranslation(
+                translation: Offset(0.0, -1.0), // visually flips list to go up
+                child: suggestionsList,
+              ),
       );
+      /*Positioned(
+        width: w,
+        child: CompositedTransformFollower(
+            link: this._layerLink,
+            showWhenUnlinked: false,
+            offset: Offset(
+                widget.suggestionsBoxDecoration.offsetX,
+                _suggestionsBox.direction == AxisDirection.down
+                    ? _suggestionsBox.textBoxHeight +
+                        widget.suggestionsBoxVerticalOffset
+                    : _suggestionsBox.directionUpOffset),
+            child: _suggestionsBox.direction == AxisDirection.down
+                ? suggestionsList
+                : FractionalTranslation(
+                    translation:
+                        Offset(0.0, -1.0), // visually flips list to go up
+                    child: suggestionsList,
+                  ),
+        ),
+      );*/
     });
   }
 

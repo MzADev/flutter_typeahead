@@ -58,6 +58,7 @@ class NavigationExample extends StatelessWidget {
                   topPadding: 30,
                   bottomPadding: 60,
                   suggestionsBoxDecoration: SuggestionsBoxDecoration(
+                    constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width),
                       color: Colors.transparent, elevation: 0, hasScrollbar: false),
                   textFieldConfiguration: TextFieldConfiguration(
                     autofocus: true,
@@ -77,8 +78,9 @@ class NavigationExample extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Row(
                         children: <Widget>[
+                          SizedBox(width: 32,),
                             Icon(Icons.shopping_cart),
-                            Text(suggestion['name'] + "hahhhhahahah"),
+                            Text(suggestion['name'] + "hahhhhahahahhhhh"),
                             Text('\$${suggestion['price']}'),
                         ],
                       ),
