@@ -900,15 +900,6 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
 
       return Positioned(
         width: w,
-        child: _suggestionsBox.direction == AxisDirection.down
-            ? suggestionsList
-            : FractionalTranslation(
-                translation: Offset(0.0, -1.0), // visually flips list to go up
-                child: suggestionsList,
-              ),
-      );
-      /*Positioned(
-        width: w,
         child: CompositedTransformFollower(
             link: this._layerLink,
             showWhenUnlinked: false,
@@ -926,7 +917,7 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
                     child: suggestionsList,
                   ),
         ),
-      );*/
+      );
     });
   }
 
@@ -1172,14 +1163,14 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
     BoxConstraints constraints;
     if (widget.decoration.constraints == null) {
       constraints = BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height/*widget.suggestionsBox.maxHeight*/,
+        maxHeight: widget.suggestionsBox.maxHeight,
       );
     } else {
       double maxHeight = min(widget.decoration.constraints.maxHeight,
           widget.suggestionsBox.maxHeight);
       constraints = widget.decoration.constraints.copyWith(
-        minHeight: MediaQuery.of(context).size.height/*min(widget.decoration.constraints.minHeight, maxHeight)*/,
-        maxHeight: MediaQuery.of(context).size.height,
+        minHeight: min(widget.decoration.constraints.minHeight, maxHeight),
+        maxHeight: maxHeight,
       );
     }
 
