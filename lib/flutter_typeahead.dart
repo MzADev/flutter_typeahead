@@ -1172,14 +1172,14 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
     BoxConstraints constraints;
     if (widget.decoration.constraints == null) {
       constraints = BoxConstraints(
-        maxHeight: widget.suggestionsBox.maxHeight,
+        maxHeight: MediaQuery.of(context).size.height/*widget.suggestionsBox.maxHeight*/,
       );
     } else {
       double maxHeight = min(widget.decoration.constraints.maxHeight,
           widget.suggestionsBox.maxHeight);
       constraints = widget.decoration.constraints.copyWith(
-        minHeight: min(widget.decoration.constraints.minHeight, maxHeight),
-        maxHeight: maxHeight,
+        minHeight: MediaQuery.of(context).size.height/*min(widget.decoration.constraints.minHeight, maxHeight)*/,
+        maxHeight: MediaQuery.of(context).size.height,
       );
     }
 

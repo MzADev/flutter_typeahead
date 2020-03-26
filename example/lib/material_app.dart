@@ -55,10 +55,11 @@ class NavigationExample extends StatelessWidget {
               Flexible(
                 child: TypeAheadField(
                   suggestionsBoxVerticalOffset: 0.0,
-                  topPadding: 30,
+                  topPadding: 150,
                   bottomPadding: 60,
                   suggestionsBoxDecoration: SuggestionsBoxDecoration(
-                    constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width),
+                    constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width,
+                    minHeight: MediaQuery.of(context).size.height),
                       color: Colors.transparent, elevation: 0, hasScrollbar: false),
                   textFieldConfiguration: TextFieldConfiguration(
                     autofocus: true,
