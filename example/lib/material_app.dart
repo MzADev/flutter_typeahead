@@ -56,7 +56,6 @@ class NavigationExample extends StatelessWidget {
                 child: TypeAheadField(
                   suggestionsBoxVerticalOffset: 0.0,
                   topPadding: 150,
-                  bottomPadding: 60,
                   suggestionsBoxDecoration: SuggestionsBoxDecoration(
                     constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width,
                     minHeight: MediaQuery.of(context).size.height),

@@ -278,7 +278,6 @@ class TypeAheadFormField<T> extends FormField<String> {
       Duration animationDuration: const Duration(milliseconds: 500),
       double animationStart: 0.25,
       double topPadding: 0.0,
-      double bottomPadding: 0.0,
       ScrollPhysics scrollPhysics: const BouncingScrollPhysics(),
       AxisDirection direction: AxisDirection.down,
       bool hideOnLoading: false,
@@ -326,7 +325,6 @@ class TypeAheadFormField<T> extends FormField<String> {
                 animationStart: animationStart,
                 animationDuration: animationDuration,
                 topPadding: topPadding,
-                bottomPadding: bottomPadding,
                 scrollPhysics: scrollPhysics,
                 direction: direction,
                 hideOnLoading: hideOnLoading,
@@ -596,7 +594,6 @@ class TypeAheadField<T> extends StatefulWidget {
   final double animationStart;
 
   final double topPadding;
-  final double bottomPadding;
 
   final ScrollPhysics scrollPhysics;
 
@@ -686,7 +683,6 @@ class TypeAheadField<T> extends StatefulWidget {
       this.transitionBuilder,
       this.animationStart: 0.25,
       this.topPadding: 0.0,
-      this.bottomPadding: 0.0,
       this.scrollPhysics: const BouncingScrollPhysics(),
       this.animationDuration: const Duration(milliseconds: 500),
       this.getImmediateSuggestions: false,
@@ -861,7 +857,6 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
         animationDuration: widget.animationDuration,
         animationStart: widget.animationStart,
         topPadding: widget.topPadding,
-        bottomPadding: widget.bottomPadding,
         scrollPhysics: widget.scrollPhysics,
         getImmediateSuggestions: widget.getImmediateSuggestions,
         onSuggestionSelected: (T selection) {
@@ -901,21 +896,21 @@ class _TypeAheadFieldState<T> extends State<TypeAheadField<T>>
       return Positioned(
         width: w,
         child: CompositedTransformFollower(
-            link: this._layerLink,
-            showWhenUnlinked: false,
-            offset: Offset(
-                widget.suggestionsBoxDecoration.offsetX,
-                _suggestionsBox.direction == AxisDirection.down
-                    ? _suggestionsBox.textBoxHeight +
-                        widget.suggestionsBoxVerticalOffset
-                    : _suggestionsBox.directionUpOffset),
-            child: _suggestionsBox.direction == AxisDirection.down
-                ? suggestionsList
-                : FractionalTranslation(
-                    translation:
-                        Offset(0.0, -1.0), // visually flips list to go up
-                    child: suggestionsList,
-                  ),
+          link: this._layerLink,
+          showWhenUnlinked: false,
+          offset: Offset(
+              widget.suggestionsBoxDecoration.offsetX,
+              _suggestionsBox.direction == AxisDirection.down
+                  ? _suggestionsBox.textBoxHeight +
+                      widget.suggestionsBoxVerticalOffset
+                  : _suggestionsBox.directionUpOffset),
+          child: _suggestionsBox.direction == AxisDirection.down
+              ? suggestionsList
+              : FractionalTranslation(
+                  translation:
+                      Offset(0.0, -1.0), // visually flips list to go up
+                  child: suggestionsList,
+                ),
         ),
       );
     });
@@ -976,7 +971,6 @@ class _SuggestionsList<T> extends StatefulWidget {
   final Duration animationDuration;
   final double animationStart;
   final double topPadding;
-  final double bottomPadding;
   final ScrollPhysics scrollPhysics;
   final AxisDirection direction;
   final bool hideOnLoading;
@@ -1005,7 +999,6 @@ class _SuggestionsList<T> extends StatefulWidget {
     this.hideOnError,
     this.keepSuggestionsOnLoading,
     this.topPadding,
-    this.bottomPadding,
     this.scrollPhysics,
   });
 
@@ -1151,11 +1144,7 @@ class _SuggestionsListState<T> extends State<_SuggestionsList<T>>
             sizeFactor: CurvedAnimation(
                 parent: this._animationController, curve: Curves.fastOutSlowIn),
             child: Padding(
-              padding: EdgeInsets.only(
-                  top: widget.topPadding,
-                  bottom: MediaQuery.of(context).viewInsets.bottom == 0.0
-                      ? widget.bottomPadding
-                      : 0),
+              padding: EdgeInsets.only(top: widget.topPadding),
               child: child,
             ),
           );
